@@ -1,0 +1,21 @@
+.s3Component {
+    background-color: rgb(111, 111, 111);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 2rem;
+}
+
+.buttonBlock {
+    display: flex;
+    margin: 1rem;
+}
+
+.objectTable {
+    width: 100%;
+}
+
+.objectTableHeader {
+    text-align: left;
+}
