@@ -1,28 +1,35 @@
 import os
 from fastapi.responses import RedirectResponse
 from authlib.integrations.httpx_client import AsyncOAuth2Client
+from urllib.parse import quote
 import requests
 
-GITHUB_CLIENT_ID = "Ov23liApBxqTascxXx7d"
+CLIENT_ID = "1076159486506-oib7sr7s0ja826pgbt6b1bqfeelmrkt7.apps.googleusercontent.com"
 REDIRECT_URI= "http://localhost:8000/api/v1/login"
-GITHUB_URL = "https://github.com/"
+TOKEN_URL = "https://oauth2.googleapis.com/token"
+PROVIDER_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+PROVIDER_URI = f"?scope=profile&response_type=code&redirect_uri={REDIRECT_URI}&client_id={CLIENT_ID}"
+
 
 try:
-    GITHUB_CLIENT_SECRET = os.getenv("S3_LOADER_CLIENT_SECRET")
+    CLIENT_SECRET = os.getenv("S3_LOADER_CLIENT_SECRET")
 except Exception as e:
     print(f"error: {e}")
 
 
 def github_oauth_redirect():
-    return RedirectResponse(url=f"https://github.com/login/oauth/authorize?client_id=Ov23liApBxqTascxXx7d&redirect_uri={REDIRECT_URI}")
+
+    print(PROVIDER_URL+PROVIDER_URI)
+    return RedirectResponse(url=f"{PROVIDER_URL}{PROVIDER_URI}")
 
 def github_token_resolve(code):
     response = requests.post(
-        f"{GITHUB_URL}/login/oauth/access_token",
+        f"{TOKEN_URL}",
         headers={'Accept': 'application/json'},
         data= {
-            "client_id": GITHUB_CLIENT_ID,
-            "client_secret": GITHUB_CLIENT_SECRET,
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": REDIRECT_URI
         }

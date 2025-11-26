@@ -45,8 +45,9 @@ async def login(code: str | None = None ):
 
     if (code):
         response = github_token_resolve(code)
+        print(response)
         if (response.get("access_token")):
-            redirect = RedirectResponse(url="http://localhost:3000/?auth=true")
+            redirect = RedirectResponse(url="http://localhost:3000/")
             redirect.set_cookie(
                 key="session_id",
                 value=response["access_token"],
