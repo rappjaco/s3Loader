@@ -2,6 +2,9 @@
 
 ## Features
 
+### Scan Status
+Show status of scans in UI, how long it took to scan. 
+
 ### User Auth
 OIDC authentication to pass user info. 
 

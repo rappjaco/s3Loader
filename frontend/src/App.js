@@ -1,10 +1,12 @@
 import Scanner from "./components/Scanner/Scanner";
+import Auth from "./components/Auth/Auth"
 
 
 function App() {
   return (
     <div className="App">
-      <Scanner />
+      <Auth />
+      {/* <Scanner /> */}
     </div>
   );
 }

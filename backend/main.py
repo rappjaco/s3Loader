@@ -1,8 +1,12 @@
 from fastapi import FastAPI, File, Form, UploadFile, BackgroundTasks
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from upload import write_file_shared_storage, list_bucket_files
 from scanner import Scanner
+from auth import github_oauth_redirect, github_token_resolve
+
+REDIRECT_URI= "http://localhost:8000"
 
 app = FastAPI()
 
@@ -35,3 +39,22 @@ async def upload_file(
     return {
         "response": result
     }
+
+@app.get("/api/v1/login")
+async def login(code: str | None = None ):
+
+    if (code):
+        response = github_token_resolve(code)
+        if (response.get("access_token")):
+            redirect = RedirectResponse(url="http://localhost:3000/?auth=true")
+            redirect.set_cookie(
+                key="session_id",
+                value=response["access_token"],
+                secure=False
+            )
+            return redirect
+        else:
+           raise ValueError("No Access Token") 
+            
+    else:
+        return github_oauth_redirect()
