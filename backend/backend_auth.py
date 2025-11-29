@@ -6,7 +6,7 @@ CLIENT_ID = "1076159486506-oib7sr7s0ja826pgbt6b1bqfeelmrkt7.apps.googleuserconte
 REDIRECT_URI = "http://localhost:8000/api/v1/login"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 PROVIDER_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-PROVIDER_URI = f"?scope=profile&response_type=code&redirect_uri={REDIRECT_URI}&client_id={CLIENT_ID}"
+PROVIDER_URI = f"?scope=openid%20profile%20email&response_type=code&redirect_uri={REDIRECT_URI}&client_id={CLIENT_ID}"
 
 
 try:
@@ -15,12 +15,11 @@ except Exception as e:
     print(f"error: {e}")
 
 
-def github_oauth_redirect():
-    print(PROVIDER_URL + PROVIDER_URI)
+def oauth_redirect():
     return RedirectResponse(url=f"{PROVIDER_URL}{PROVIDER_URI}")
 
 
-def github_token_resolve(code):
+def token_resolve(code):
     response = requests.post(
         f"{TOKEN_URL}",
         headers={"Accept": "application/json"},
@@ -37,7 +36,7 @@ def github_token_resolve(code):
 
 def auth_user_data(token):
     response = requests.get(
-        "https://www.googleapis.com/auth/userinfo.profile",
-        headers={"Authorization": f"Bearer {token}"},
+        "https://openidconnect.googleapis.com/v1/userinfo",
+        headers={"Authorization": f"Bearer {token}"}
     )
     return response

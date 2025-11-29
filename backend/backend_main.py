@@ -1,9 +1,10 @@
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Request, Form
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from backend_upload import write_file_shared_storage, list_bucket_files
 from backend_scanner import Scanner
-from backend_auth import github_oauth_redirect, github_token_resolve, auth_user_data
+from pydantic import BaseModel
+from backend_auth import oauth_redirect, token_resolve, auth_user_data
 
 REDIRECT_URI = "http://localhost:8000"
 
@@ -16,6 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class TokenData(BaseModel):
+    user_access_token: str
 
 
 @app.get("/api/v1/list")
@@ -35,20 +39,57 @@ async def upload_file(
     return {"response": result}
 
 
+@app.post("/api/v1/user_token")
+async def token(user_access_token: str = Form()):
+    response = auth_user_data(user_access_token)
+    return response.json()
+
 @app.get("/api/v1/login")
 async def login(code: str | None = None):
     if code:
-        response = github_token_resolve(code)
-        if response.get("access_token"):
-            redirect = RedirectResponse(url="http://localhost:3000/")
-            redirect.set_cookie(
-                key="session_id", value=response["access_token"], secure=False
-            )
-            user_info = auth_user_data(response.get("access_token"))
-            print(f" userinfo: {user_info.text}")
-            return redirect
+        response = token_resolve(code)
+        access_token = response.get("access_token")
+        if (access_token):
+            return HTMLResponse(f"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Success</title>
+                    <style>
+                        .code-box {{
+                            background: #f5f5f5;
+                            padding: 15px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            margin: 20px 0;
+                            font-family: monospace;
+                            font-size: 18px;
+                        }}
+                        .code-box:hover {{
+                            background: #e8e8e8;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h1>Authentication Successful!</h1>
+                    <p>Click the code below to copy:</p>
+                    <div class="code-box" onclick="copy(this)">
+                        {access_token}
+                    </div>
+                    <p id="status"></p>
+
+                    <script>
+                        function copy(el) {{
+                            navigator.clipboard.writeText(el.textContent.trim());
+                            document.getElementById('status').textContent = '✓ Copied to clipboard!';
+                        }}
+                    </script>
+                </body>
+                </html>
+                """)
         else:
             raise ValueError("No Access Token")
 
     else:
-        return github_oauth_redirect()
+        return oauth_redirect()
