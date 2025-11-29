@@ -42,6 +42,8 @@ async def upload_file(
 @app.post("/api/v1/user_token")
 async def token(user_access_token: str = Form()):
     response = auth_user_data(user_access_token)
+    if response.status_code == 401:
+        return response.status_code
     return response.json()
 
 @app.get("/api/v1/login")
@@ -93,3 +95,4 @@ async def login(code: str | None = None):
 
     else:
         return oauth_redirect()
+

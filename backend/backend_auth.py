@@ -40,3 +40,4 @@ def auth_user_data(token):
         headers={"Authorization": f"Bearer {token}"}
     )
     return response
+
