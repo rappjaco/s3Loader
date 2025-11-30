@@ -1,10 +1,10 @@
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Request, Form
+from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Request, Form, Depends
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from backend_upload import write_file_shared_storage, list_bucket_files
 from backend_scanner import Scanner
 from pydantic import BaseModel
-from backend_auth import oauth_redirect, token_resolve, auth_user_data
+from backend_auth import oauth_redirect, token_resolve, auth_user_data, validate_user_token
 
 REDIRECT_URI = "http://localhost:8000"
 
@@ -23,14 +23,14 @@ class TokenData(BaseModel):
 
 
 @app.get("/api/v1/list")
-async def list_files():
+async def list_files(user_token: str = Depends(validate_user_token)):
     return list_bucket_files()
 
 
 @app.post("/api/v1/upload")
 async def upload_file(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(),
+    file: UploadFile = File()
 ):
     contents = await file.read()
     result = write_file_shared_storage(contents, file.filename)

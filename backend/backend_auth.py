@@ -1,5 +1,7 @@
 import os
 from fastapi.responses import RedirectResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException
 import requests
 
 CLIENT_ID = "1076159486506-oib7sr7s0ja826pgbt6b1bqfeelmrkt7.apps.googleusercontent.com"
@@ -8,6 +10,7 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 PROVIDER_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 PROVIDER_URI = f"?scope=openid%20profile%20email&response_type=code&redirect_uri={REDIRECT_URI}&client_id={CLIENT_ID}"
 
+security = HTTPBearer()
 
 try:
     CLIENT_SECRET = os.getenv("S3_LOADER_CLIENT_SECRET")
@@ -41,3 +44,8 @@ def auth_user_data(token):
     )
     return response
 
+def validate_user_token(user_token: HTTPAuthorizationCredentials = Depends(security)):
+    response = auth_user_data(user_token)
+    if (response.status_code != 200):
+        raise HTTPException(403, detail="Token expired login again")
+    return {"Authentication Success"} 

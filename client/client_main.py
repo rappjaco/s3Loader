@@ -1,5 +1,6 @@
 import sys
 from client_auth import user_login_init
+from client_s3 import list_files
 
 if len(sys.argv) < 2:
     print("Please provide action argument")
@@ -8,6 +9,10 @@ if len(sys.argv) < 2:
 if sys.argv[1] == "login":
     print("Logging in")
     response = user_login_init()
+
+elif sys.argv[1] == "list":
+    response = list_files()
+    print(response)
 
 else:
     print("Argument not a valid action option")
