@@ -1,10 +1,12 @@
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Request, Form, Depends
+from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Request, Form, Depends, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from backend_upload import write_file_shared_storage, list_bucket_files
 from backend_scanner import Scanner
 from pydantic import BaseModel
 from backend_auth import oauth_redirect, token_resolve, auth_user_data, validate_user_token
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+from typing import Annotated
 
 REDIRECT_URI = "http://localhost:8000"
 
@@ -18,8 +20,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+
+class UserBase(SQLModel):
+    name: str = Field(index=True)
+    email: str =Field(index=True)
+
+class User(UserBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    secret_name: str
+
+class UserPublic(UserBase):
+    id: int
+
+class UserCreate(UserBase):
+    secret_name: str
+
+
 class TokenData(BaseModel):
     user_access_token: str
+
+
+
+
+engine = create_engine("postgresql://scanner:scanner_dev_password@localhost:5432/scanner")
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
+SessionDep = Annotated[Session, Depends(get_session)]
+
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+@app.post("/user/", response_model=UserPublic)
+def create_create(user: UserCreate, session: SessionDep):
+    db_user = User.model_validate(user)
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+    return db_user
+
+@app.get("/user/{user_id}/")
+def read_create(user_id: int, session: SessionDep):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 
 @app.get("/api/v1/list")
