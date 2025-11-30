@@ -45,7 +45,7 @@ def auth_user_data(token):
     return response
 
 def validate_user_token(user_token: HTTPAuthorizationCredentials = Depends(security)):
-    response = auth_user_data(user_token)
+    response = auth_user_data(user_token.credentials)
     if (response.status_code != 200):
         raise HTTPException(403, detail="Token expired login again")
     return {"Authentication Success"} 
