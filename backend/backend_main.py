@@ -30,7 +30,8 @@ async def list_files(user_token: str = Depends(validate_user_token)):
 @app.post("/api/v1/upload")
 async def upload_file(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File()
+    file: UploadFile = File(),
+    user_token: str = Depends(validate_user_token)
 ):
     contents = await file.read()
     result = write_file_shared_storage(contents, file.filename)
