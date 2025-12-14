@@ -47,11 +47,12 @@ async def list_files(user_token: str = Depends(validate_user_token)):
 async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(),
-    user_token: str = Depends(validate_user_token)
+    user_email: str = Depends(validate_user_token)
 ):
     contents = await file.read()
     result = write_file_shared_storage(contents, file.filename)
-    scanner = Scanner(file.filename)
+    scanner = Scanner(file.filename, user_email["email"])
+    scanner.scanner_audit()
     background_tasks.add_task(scanner.scanner_init)
     return {"response": result}
 
