@@ -23,11 +23,16 @@ def list_files():
 
 def upload_file(file_path):
     user_token = read_user_token()
+    if file_path.find("/"):
+        file_name_list = file_path.split("/")
+        file_name = file_name_list[-1]
+    else:
+        file_name = file_path
     bearer_token = {"Authorization": f"Bearer {user_token}"}
     with open(file_path, "rb") as file:
         file = file.read()    
         response = requests.post(f"{BACKEND_HOSTNAME}{S3_UPLOAD_URI}",
                              headers=bearer_token, 
-                             files={"file": file}
+                             files={"file": (file_name, file)}
                              )
     return response.json()

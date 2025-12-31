@@ -50,6 +50,7 @@ async def upload_file(
     user_email: str = Depends(validate_user_token)
 ):
     contents = await file.read()
+    print(file.filename)
     result = write_file_shared_storage(contents, file.filename)
     scanner = Scanner(file.filename, user_email["email"])
     scanner.scanner_audit()
